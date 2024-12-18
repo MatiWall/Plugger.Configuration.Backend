@@ -1,11 +1,8 @@
-import { AppConfig, createAppConfig, ConfigType } from './AppConfig';
+import { ConfigType, ConfigSchema } from '@plugger/configuration-core';
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse as parseYaml } from 'yaml';
-import configSchema from './schema';
-import { create } from 'domain';
-
-
+import {ConfigReader} from './reader'
 // Mock fs and path modules
 jest.mock('fs');
 jest.mock('path');
@@ -18,10 +15,6 @@ describe('AppConfig', () => {
         jest.clearAllMocks();  // Reset mocks after each test
     });
 
-    test('Create AppConfig with defaults', ()=>{
-        const appConfig = createAppConfig();
-    })
-
     test('should load JSON config correctly', () => {
         const mockFilePath = 'config.json';
         const mockJsonData = { app: { title: 'test', url: 'https://test.com'} };
@@ -29,9 +22,9 @@ describe('AppConfig', () => {
         (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(mockJsonData));  // Simulate file content
         (path.extname as jest.Mock).mockReturnValue('.json');  // Simulate the file extension
         
-        const appConfig = createAppConfig({config: mockFilePath});
+        const appConfig = new ConfigReader(mockFilePath);
 
-        expect(appConfig.config).toEqual(configSchema.parse(mockJsonData));
+        expect(appConfig.config).toEqual(ConfigSchema.parse(mockJsonData));
     });
 
     test('should load YAML config correctly', () => {
@@ -42,9 +35,9 @@ describe('AppConfig', () => {
         (path.extname as jest.Mock).mockReturnValue('.yaml');  // Simulate the file extension
         (parseYaml as jest.Mock).mockReturnValue(mockYamlData);  // Mock YAML parser
         
-        const appConfig = new AppConfig(mockFilePath);
+        const reader = new ConfigReader(mockFilePath);
 
-        expect(appConfig.config).toEqual(configSchema.parse(mockYamlData));
+        expect(reader.config).toEqual(ConfigSchema.parse(mockYamlData));
     });
 
     test('should throw an error if file does not exist', () => {
@@ -52,7 +45,7 @@ describe('AppConfig', () => {
         (fs.existsSync as jest.Mock).mockReturnValue(false);  // Simulate file not existing
         
         expect(() => {
-            new AppConfig(mockFilePath);
+            new ConfigReader(mockFilePath);
         }).toThrowError(`File not found: ${mockFilePath}`);
     });
 
@@ -63,7 +56,7 @@ describe('AppConfig', () => {
         (path.extname as jest.Mock).mockReturnValue('.txt');  // Simulate an unsupported file extension
         
         expect(() => {
-            new AppConfig(mockFilePath);
+            new ConfigReader(mockFilePath);
         }).toThrow('Unsupported file format: .txt');
     });
 
@@ -75,27 +68,7 @@ describe('AppConfig', () => {
         (path.extname as jest.Mock).mockReturnValue('.json');  // Simulate the file extension
 
         expect(() => {
-            new AppConfig(mockFilePath);
+            new ConfigReader(mockFilePath);
         }).toThrow();
     });
-
-    test('Access Extension config', ()=>{
-
-        const extensionConfig = {
-            'this': 'is the config for an extensions'
-        }
-
-        const mockJsonData: ConfigType = { 
-            app: { title: 'test', url: 'https://test.com'}, 
-            environment: 'test',
-            extensions: {
-                'component:test/test': extensionConfig
-            }
-        };
-        
-        const appConfig = createAppConfig({config: mockJsonData});
-
-
-        expect(appConfig.getExtensionConfig('test', 'test', 'component')).toBe(extensionConfig);
-    })
 });
