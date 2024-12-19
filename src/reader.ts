@@ -12,8 +12,9 @@ class ConfigReader {
 
     constructor(filePath: string) {
         this.schema = ConfigSchema;
-
-        this.config = this.schema.parse(filePath);
+        
+        const tmpConfig = this.loadAndValidateConfig(filePath);
+        this.config = this.schema.parse(tmpConfig);
 
     }
 

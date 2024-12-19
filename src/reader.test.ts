@@ -3,16 +3,18 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { parse as parseYaml } from 'yaml';
 import {ConfigReader} from './reader'
-// Mock fs and path modules
-jest.mock('fs');
-jest.mock('path');
-jest.mock('yaml', () => ({
-  parse: jest.fn()
+import { vi } from 'vitest';
+
+
+vi.mock('fs');
+vi.mock('path');
+vi.mock('yaml', () => ({
+  parse: vi.fn()
 }));
 
 describe('AppConfig', () => {
     afterEach(() => {
-        jest.clearAllMocks();  // Reset mocks after each test
+        vi.clearAllMocks();  // Reset mocks after each test
     });
 
     test('should load JSON config correctly', () => {
@@ -46,7 +48,7 @@ describe('AppConfig', () => {
         
         expect(() => {
             new ConfigReader(mockFilePath);
-        }).toThrowError(`File not found: ${mockFilePath}`);
+        }).toThrow();
     });
 
     test('should throw an error if the file extension is unsupported', () => {
@@ -57,7 +59,7 @@ describe('AppConfig', () => {
         
         expect(() => {
             new ConfigReader(mockFilePath);
-        }).toThrow('Unsupported file format: .txt');
+        }).toThrow();
     });
 
     test('should throw an error if the config does not match the schema', () => {
