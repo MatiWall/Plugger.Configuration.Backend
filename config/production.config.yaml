@@ -1,0 +1,5 @@
+app: 
+  title: Default Title
+  url: https://example.com
+environment: development
+extensions: 
